@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "dev.assasans.actionscript"
-version = "1.0.0-SNAPSHOT"
+version = "1.0.1-SNAPSHOT"
 
 gradlePlugin {
   val actionscript by plugins.registering {
@@ -35,9 +35,8 @@ tasks {
   }
 
   val signingTasks: TaskCollection<Sign> = withType<Sign>()
-  withType<PublishToMavenRepository>().configureEach {
-    mustRunAfter(signingTasks)
-  }
+  withType<PublishToMavenRepository>().configureEach { mustRunAfter(signingTasks) }
+  withType<PublishToMavenLocal>().configureEach { mustRunAfter(signingTasks) }
 }
 
 publishing {

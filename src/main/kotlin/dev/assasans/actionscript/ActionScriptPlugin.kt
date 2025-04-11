@@ -17,7 +17,7 @@ class ActionScriptPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     val extension = project.extensions.create("actionscript", ActionScriptExtension::class.java, project)
 
-    val sdk = project.file(requireNotNull(project.property("dev.assasans.actionscript.sdk")) {
+    val sdk = project.rootProject.file(requireNotNull(project.rootProject.property("dev.assasans.actionscript.sdk")) {
       "Missing ActionScript SDK path. Set the 'actionscript.sdk' property in your gradle.properties file."
     })
     if(!sdk.exists()) throw IllegalArgumentException("ActionScript SDK path does not exist: $sdk")
