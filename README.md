@@ -42,7 +42,7 @@ dev.assasans.actionscript.sdk=/path/to/your/AIR_SDK
 
 ```kotlin
 plugins {
-  id("dev.assasans.actionscript") version "1.0.0"
+  id("dev.assasans.actionscript") version "1.0.3-SNAPSHOT"
 }
 
 actionscript {

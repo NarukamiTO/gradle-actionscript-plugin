@@ -59,9 +59,9 @@ class ActionScriptPlugin : Plugin<Project> {
       task.description = "Compiles ActionScript project into an SWC file"
       task.dependsOn(prepareSources)
 
-      extension.sources.forEach { source ->
-        task.inputs.dir(source)
-      }
+      extension.sources.forEach { source -> task.inputs.dir(source) }
+      extension.configs.forEach { config -> task.inputs.file(config) }
+
       task.outputs.file(project.layout.buildDirectory.file("libs/library.swc"))
 
       val staticLibraries = project.configurations.getByName("implementation").dependencies.flatMap { dependency ->
@@ -108,9 +108,9 @@ class ActionScriptPlugin : Plugin<Project> {
       if(extension.swfIncludeAllClasses) task.dependsOn(generateClassList)
       task.dependsOn(prepareSources)
 
-      extension.sources.forEach { source ->
-        task.inputs.dir(source)
-      }
+      extension.sources.forEach { source -> task.inputs.dir(source) }
+      extension.configs.forEach { config -> task.inputs.file(config) }
+
       task.outputs.file(project.layout.buildDirectory.file("libs/executable.swf"))
 
       val staticLibraries = project.configurations.getByName("implementation").dependencies.flatMap { dependency ->
