@@ -24,6 +24,14 @@ pluginManagement {
 }
 ```
 
+Then, apply the plugin in your `build.gradle.kts`:
+
+```kotlin
+plugins {
+  id("dev.assasans.actionscript") version "1.0.0-SNAPSHOT"
+}
+```
+
 ## Example usage
 
 Set `dev.assasans.actionscript.sdk` property to the path of the Adobe AIR SDK. This can be done in `gradle.properties`:
