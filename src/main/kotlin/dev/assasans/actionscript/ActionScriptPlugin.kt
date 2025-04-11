@@ -4,15 +4,31 @@ import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.dsl.DependencyHandler
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.JavaExec
 
 // TODO: No obvious replacement for deprecated [dependencyProject] API
 @Suppress("DEPRECATION")
+private fun makeDependentAndCollectOutput(task: Task, dependency: Dependency): FileCollection {
+  return when(dependency) {
+    is ProjectDependency        -> {
+      val inner = dependency.dependencyProject.tasks.getByName("compileSwc")
+      task.dependsOn(inner)
+      inner.outputs.files
+    }
+
+    is FileCollectionDependency -> dependency.files
+    else                        -> throw IllegalArgumentException("Unsupported dependency type: ${dependency::class.java.name}")
+  }
+}
+
 class ActionScriptPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     val extension = project.extensions.create("actionscript", ActionScriptExtension::class.java, project)
@@ -49,15 +65,11 @@ class ActionScriptPlugin : Plugin<Project> {
       task.outputs.file(project.layout.buildDirectory.file("libs/library.swc"))
 
       val staticLibraries = project.configurations.getByName("implementation").dependencies.flatMap { dependency ->
-        val inner = (dependency as ProjectDependency).dependencyProject.tasks.getByName("compileSwc")
-        task.dependsOn(inner)
-        inner.outputs.files
+        makeDependentAndCollectOutput(task, dependency)
       }
 
       val externalLibraries = project.configurations.getByName("compileOnly").dependencies.flatMap { dependency ->
-        val inner = (dependency as ProjectDependency).dependencyProject.tasks.getByName("compileSwc")
-        task.dependsOn(inner)
-        inner.outputs.files
+        makeDependentAndCollectOutput(task, dependency)
       }
 
       (staticLibraries + externalLibraries).forEach { library ->
@@ -102,15 +114,11 @@ class ActionScriptPlugin : Plugin<Project> {
       task.outputs.file(project.layout.buildDirectory.file("libs/executable.swf"))
 
       val staticLibraries = project.configurations.getByName("implementation").dependencies.flatMap { dependency ->
-        val inner = (dependency as ProjectDependency).dependencyProject.tasks.getByName("compileSwc")
-        task.dependsOn(inner)
-        inner.outputs.files
+        makeDependentAndCollectOutput(task, dependency)
       }
 
       val externalLibraries = project.configurations.getByName("compileOnly").dependencies.flatMap { dependency ->
-        val inner = (dependency as ProjectDependency).dependencyProject.tasks.getByName("compileSwc")
-        task.dependsOn(inner)
-        inner.outputs.files
+        makeDependentAndCollectOutput(task, dependency)
       }
 
       (staticLibraries + externalLibraries).forEach { library ->
