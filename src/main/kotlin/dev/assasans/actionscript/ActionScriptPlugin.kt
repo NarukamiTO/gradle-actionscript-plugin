@@ -13,19 +13,48 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.JavaExec
+import org.gradle.internal.cc.base.logger
 
 // TODO: No obvious replacement for deprecated [dependencyProject] API
 @Suppress("DEPRECATION")
 private fun makeDependentAndCollectOutput(task: Task, dependency: Dependency): FileCollection {
   return when(dependency) {
     is ProjectDependency        -> {
-      val inner = dependency.dependencyProject.tasks.getByName("compileSwc")
-      task.dependsOn(inner)
-      inner.outputs.files
+      val dependencyProject = dependency.dependencyProject
+      val compileSwc = dependencyProject.tasks.getByName("compileSwc")
+      val extractSwc = dependencyProject.tasks.getByName("extractSwc")
+
+      task.dependsOn(compileSwc)
+      task.dependsOn(extractSwc)
+
+      compileSwc.outputs.files
     }
 
     is FileCollectionDependency -> dependency.files
     else                        -> throw IllegalArgumentException("Unsupported dependency type: ${dependency::class.java.name}")
+  }
+}
+
+// TODO: No obvious replacement for deprecated [dependencyProject] API
+@Suppress("DEPRECATION")
+private fun makeDependentRecursiveAndCollectOutput(task: Task, project: Project): List<File> {
+  return project.configurations.getByName("compileOnly").dependencies.flatMap { dependency ->
+    when(dependency) {
+      is ProjectDependency        -> {
+        val dependencyProject = dependency.dependencyProject
+        val compileSwc = dependencyProject.tasks.getByName("compileSwc")
+        val extractSwc = dependencyProject.tasks.getByName("extractSwc")
+
+        task.dependsOn(compileSwc)
+        task.dependsOn(extractSwc)
+        logger.warn("Make ${dependencyProject.name} dependency of ${task.project.name}")
+
+        compileSwc.outputs.files + makeDependentRecursiveAndCollectOutput(task, dependency.dependencyProject)
+      }
+
+      is FileCollectionDependency -> dependency.files.toList()
+      else                        -> throw IllegalArgumentException("Unsupported dependency type: ${dependency::class.java.name}")
+    }
   }
 }
 
@@ -68,9 +97,7 @@ class ActionScriptPlugin : Plugin<Project> {
         makeDependentAndCollectOutput(task, dependency)
       }
 
-      val externalLibraries = project.configurations.getByName("compileOnly").dependencies.flatMap { dependency ->
-        makeDependentAndCollectOutput(task, dependency)
-      }
+      val externalLibraries = makeDependentRecursiveAndCollectOutput(task, project)
 
       (staticLibraries + externalLibraries).forEach { library ->
         task.inputs.file(library)
@@ -119,9 +146,7 @@ class ActionScriptPlugin : Plugin<Project> {
         makeDependentAndCollectOutput(task, dependency)
       }
 
-      val externalLibraries = project.configurations.getByName("compileOnly").dependencies.flatMap { dependency ->
-        makeDependentAndCollectOutput(task, dependency)
-      }
+      val externalLibraries = makeDependentRecursiveAndCollectOutput(task, project)
 
       (staticLibraries + externalLibraries).forEach { library ->
         task.inputs.file(library)
