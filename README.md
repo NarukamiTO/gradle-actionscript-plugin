@@ -28,7 +28,7 @@ Then, apply the plugin in your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-  id("dev.assasans.actionscript") version "1.0.0-SNAPSHOT"
+  id("dev.assasans.actionscript") version "1.0.5-SNAPSHOT"
 }
 ```
 

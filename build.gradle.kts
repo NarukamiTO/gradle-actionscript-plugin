@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "dev.assasans.actionscript"
-version = "1.0.4-SNAPSHOT"
+version = "1.0.5-SNAPSHOT"
 
 gradlePlugin {
   val actionscript by plugins.registering {

@@ -90,6 +90,8 @@ class ActionScriptPlugin : Plugin<Project> {
 
       task.classpath = project.files("$sdkDir/lib/compc-cli.jar")
       task.systemProperties["flexlib"] = "$sdkDir/frameworks"
+      task.jvmArguments.add("-XX:ActiveProcessorCount=1")
+      task.jvmArguments.add("-XX:+UseSerialGC")
       task.args(args)
     }
 
@@ -145,6 +147,8 @@ class ActionScriptPlugin : Plugin<Project> {
 
       task.classpath = project.files("$sdkDir/lib/mxmlc-cli.jar")
       task.systemProperties["flexlib"] = "$sdkDir/frameworks"
+      task.jvmArguments.add("-XX:ActiveProcessorCount=1")
+      task.jvmArguments.add("-XX:+UseSerialGC")
       task.args(args)
     }
 
