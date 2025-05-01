@@ -155,22 +155,25 @@ class ActionScriptPlugin : Plugin<Project> {
       task.mustRunAfter(compileSwc)
 
       task.from(project.zipTree(project.layout.buildDirectory.file("libs/library.swc")))
-      task.into(project.layout.buildDirectory.dir("tmp"))
-
-      task.doLast {
-        project.copy {
-          it.from(project.layout.buildDirectory.file("tmp/library.swf"))
-          it.into(project.layout.buildDirectory.dir("libs/"))
-        }
-      }
+      task.into(project.layout.buildDirectory.dir("libs"))
+      task.include("library.swf")
     }
 
+    // TODO: No obvious replacement for deprecated [dependencyProject] API
+    @Suppress("DEPRECATION")
     fun collectDependencies(project: Project, collected: MutableSet<Dependency>): Set<Dependency> {
       val dependencies = project.configurations.getByName("implementation").dependencies +
                          project.configurations.getByName("compileOnly").dependencies
       dependencies.forEach { dependency ->
-        collected.add(dependency)
-        collectDependencies((dependency as ProjectDependency).dependencyProject, collected)
+        when(dependency) {
+          is FileCollectionDependency -> return@forEach
+          is ProjectDependency        -> {
+            collected.add(dependency)
+            collectDependencies(dependency.dependencyProject, collected)
+          }
+
+          else                        -> throw IllegalArgumentException("Unsupported dependency type: ${dependency::class}")
+        }
       }
 
       return collected
